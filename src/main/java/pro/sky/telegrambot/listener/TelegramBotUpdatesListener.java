@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
 
 @Service
 public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
-    private Map<Long, String> userStates = new HashMap<>();
+    public Map<Long, String> userStates = new HashMap<>();
     private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-9\\d{2}-\\d{3}-\\d{2}-\\d{2}");
 //    private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-\\d{3}-\\d{3}-\\d{2}-\\d{2}");
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
@@ -110,14 +110,14 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
         user.setId(user.getId());
         user.setLogin(login);
         repository.save(user);
-        sendMessage(chatId, "Привет, " + name + ". Я бот, который поможет вам взаимодействовать с королевством" +
-                "\n" + "Я могу рассказать вам о королевстве, его правилах и дальнейших действиях" +
-                "\n" + "Жми скорее /menu");
+        sendMessage(chatId,   name + " , приветствуем на территории Мастерской Игрового Психосинтеза" +
+                "\n" +
+                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» " );
     }
 
 
     //Метод, определяющий правильность номера телефона и позволяющий записать контактные данные в БД при корректном их написании
-    private void handleContactInput(Long chatId, String text) {
+    public void handleContactInput(Long chatId, String text) {
         String digitsOnly = text.replaceAll("\\D", ""); // Извлекаем только цифры
 
         // Проверяем, что длина номера правильная (обычно 11 цифр, включая код страны)
@@ -148,9 +148,9 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 + digitsOnly.substring(9);          // последние 2 цифры
     }
 
-    private void writeDownContactPhoneNumber(long chatId) {
+    public void writeDownContactPhoneNumber(long chatId) {
         String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультируют Вас. " +
-                "Введите номер телефона";
+                "Введите номер телефона, начиная с 7 без плюса, например" + "\n" + "79998881122";
         sendMessage(chatId, text);
         userStates.put(chatId, "PhoneListener");
     }
@@ -160,7 +160,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     }
 
     //Метод, помогающий вывести сообщение пользователю
-    private void sendMessage(long chatId, String text) {
+    public void sendMessage(long chatId, String text) {
         SendMessage message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
         message.setText(text);
@@ -209,32 +209,49 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 outputStream.write("\n\n".getBytes());
             }
             byte[] fullFileData = outputStream.toByteArray();
-            sendFile(chatId, fullFileData, "database_export.txt");
+            try {
+                sendFile(chatId, fullFileData, "database_export.txt");
+            } catch (TelegramApiException e) {
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
             sendMessage(chatId, "Ошибка при экспорте данных");
         }
     }
 
-    private void sendFile(long chatId, byte[] fileData, String fileName) {
+    public void sendFile(long chatId, byte[] fileData, String fileName) throws TelegramApiException {
+        // Проверка на пустой файл
         if (fileData == null || fileData.length == 0) {
             System.out.println("File data is null or empty. Aborting file send.");
             sendMessage(chatId, "Файл пустой");
             return;
         }
 
-        InputStream inputStream = new ByteArrayInputStream(fileData);
-        InputFile inputFile = new InputFile(inputStream, fileName); // Создаем объект InputFile
+        // Создаем InputFile
+        try (InputStream inputStream = new ByteArrayInputStream(fileData)) {
+            InputFile inputFile = new InputFile(inputStream, fileName); // Создаем объект InputFile
 
-        SendDocument sendDocument = new SendDocument();
-        sendDocument.setChatId(chatId);
-        sendDocument.setDocument(inputFile); // Устанавливаем файл
+            // Создаем объект SendDocument
+            SendDocument sendDocument = new SendDocument();
+            sendDocument.setChatId(String.valueOf(chatId));
+            sendDocument.setDocument(inputFile); // Устанавливаем файл
 
-        try {
+            System.out.println("SendDocument created: " + sendDocument);
+
+            // Проверка на null
+            if (sendDocument.getDocument() == null) {
+                System.err.println("SendDocument document is null.");
+                sendMessage(chatId, "Ошибка: документ не найден.");
+                return;
+            }
+
+            // Отправляем документ
             execute(sendDocument); // Отправляем файл через API Telegram
-        } catch (TelegramApiException e) {
+
+        } catch (TelegramApiException | IOException e) {
             e.printStackTrace();
-            sendMessage(chatId, "Ошибка при отправке файла");
+            sendMessage(chatId, "Ошибка при отправке файла: " + e.getMessage());
         }
     }
     @Override

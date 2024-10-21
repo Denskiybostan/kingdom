@@ -25,6 +25,9 @@ public class FileService {
         FileData file = new FileData(fileName, fileData, user);
         fileRepository.save(file);
     }
+    public byte[] loadFile(String fileName) {
+        return null;
+    }
 
 
 }
