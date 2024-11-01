@@ -1,6 +1,10 @@
 package pro.sky.telegrambot.listener;
 
 import com.pengrad.telegrambot.TelegramBot;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +116,9 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
         repository.save(user);
         sendMessage(chatId,   name + " , приветствуем на территории Мастерской Игрового Психосинтеза" +
                 "\n" +
-                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» " );
+                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» " +
+                "\n" +
+                "нажмите повторно кнопку /start ");
     }
 
 
@@ -191,26 +197,29 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     }
 
     public void exportDataToDataFile(long chatId) {
-        List<FileData> allFiles = fileRepository.findAll();
-        System.out.println("Найденные файлы " + allFiles.size());
-        if (allFiles.isEmpty()) {
+        List<User> allUsers = repository.findAll(); //здесь имеется ввиду репозиторий юзеров
+        System.out.println("Найденные файлы " + allUsers.size());
+        if (allUsers.isEmpty()) {
             sendMessage(chatId, "Нет файлов для выгрузки");
             return;
         }
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            for (FileData file : allFiles) {
-                outputStream.write(("Имя файла: " + file.getFileName() + "\n").getBytes());
-                System.out.println("Записываем файл " + file.getFileName());
-                outputStream.write(file.getFileData());
-                outputStream.write("\n\n".getBytes());
+        try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+            Sheet sheet = workbook.createSheet("Users");
+            //Создание заголовков столбцов
+            Row headerRow = sheet.createRow(0);
+            headerRow.createCell(0).setCellValue("Login");
+            headerRow.createCell(1).setCellValue("Phone");
+            //Заполнение данных
+            int rowNum = 1;
+            for (User user : allUsers) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(user.getLogin());
+                row.createCell(1).setCellValue(user.getPhone());
             }
-            byte[] fullFileData = outputStream.toByteArray();
-            try {
-                sendFile(chatId, fullFileData, "database_export.txt");
-            } catch (TelegramApiException e) {
-
-            }
-        } catch (IOException e) {
+            workbook.write(outputStream);
+            byte[] excelData = outputStream.toByteArray();
+            sendFile(chatId, excelData, "user_data_export.xlsx");
+        } catch (IOException | TelegramApiException e) {
             e.printStackTrace();
             sendMessage(chatId, "Ошибка при экспорте данных");
         }

@@ -19,7 +19,6 @@ public class MenuBot {
 
         List<KeyboardRow> keyboardRows = new ArrayList<>();
         KeyboardRow row1 = new KeyboardRow();
-        row1.add("Информация о королевстве");
         row1.add("Добавить номер телефона для дальнейшей связи");
         keyboardRows.add(row1);
         if (isAdmin(chatId)) {
