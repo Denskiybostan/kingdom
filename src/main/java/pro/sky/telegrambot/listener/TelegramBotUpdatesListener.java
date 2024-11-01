@@ -119,20 +119,16 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     //Метод, определяющий правильность номера телефона и позволяющий записать контактные данные в БД при корректном их написании
     public void handleContactInput(Long chatId, String text) {
         String digitsOnly = text.replaceAll("\\D", ""); // Извлекаем только цифры
-
         // Проверяем, что длина номера правильная (обычно 11 цифр, включая код страны)
         if (digitsOnly.length() == 11 && digitsOnly.startsWith("7")) {
             String formattedPhone = formatPhoneNumber(digitsOnly);
-
             var task = repository.findByChatId(chatId);
             task.setPhone(formattedPhone);
             repository.save(task);
-
             String fileName = "user_" + chatId + "_phone.txt";
             byte[] fileData = formattedPhone.getBytes();
             String userLogin = task.getLogin();
             fileService.saveFile(fileName, fileData, userLogin);
-
             sendMessage(chatId, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
         } else {
             sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
