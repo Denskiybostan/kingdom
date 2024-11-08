@@ -19,7 +19,6 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import pro.sky.telegrambot.configuration.ConfigurationKingdom;
-import pro.sky.telegrambot.model.FileData;
 import pro.sky.telegrambot.model.MenuBot;
 import pro.sky.telegrambot.model.User;
 import pro.sky.telegrambot.repository.FileRepository;
@@ -116,9 +115,8 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
         repository.save(user);
         sendMessage(chatId,   name + " , приветствуем на территории Мастерской Игрового Психосинтеза" +
                 "\n" +
-                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» " +
-                "\n" +
-                "нажмите повторно кнопку /start ");
+                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» ");
+        menu(chatId);
     }
 
 
@@ -137,7 +135,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             fileService.saveFile(fileName, fileData, userLogin);
             sendMessage(chatId, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
         } else {
-            sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+            sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
         }
     }
 
@@ -151,13 +149,13 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     }
 
     public void writeDownContactPhoneNumber(long chatId) {
-        String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультируют Вас. " +
+        String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультирует Вас. " +
                 "Введите номер телефона, начиная с 7 без плюса, например" + "\n" + "79998881122";
         sendMessage(chatId, text);
         userStates.put(chatId, "PhoneListener");
     }
     private void menu(long chatId) {
-        String text = "выберите услугу";
+        String text = " ";
         sendMessage2(chatId, text, menuBot.sendMainMenu(chatId));
     }
 
