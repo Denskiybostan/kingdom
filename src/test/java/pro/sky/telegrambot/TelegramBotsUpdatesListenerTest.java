@@ -86,7 +86,7 @@ public class TelegramBotsUpdatesListenerTest {
         telegramBotUpdatesListener.handleContactInput(123456789L, invalidPhoneNumber);
         verify(userRepository, never()).save(any(User.class));
         //проверка сообщения об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
     }
 
     @Test
@@ -109,7 +109,7 @@ public class TelegramBotsUpdatesListenerTest {
         //проверяем, что пользователь не был сохранен
         verify(userRepository, never()).save(any(User.class));
         //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
     }
 
     @Test
@@ -132,7 +132,7 @@ public class TelegramBotsUpdatesListenerTest {
         //проверяем, что пользователь не был сохранен
         verify(userRepository, never()).save(any(User.class));
         //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
     }
     @Test
     public void testHandleContactInput_PhoneNumberWithNonNumericCharacters() {
@@ -154,7 +154,7 @@ public class TelegramBotsUpdatesListenerTest {
         //проверяем, что пользователь не был сохранен
         verify(userRepository, never()).save(any(User.class));
         //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
     }
     @Test
     public void testHandleContactInput_EmptyOrNullPhoneNumber() {
@@ -176,7 +176,7 @@ public class TelegramBotsUpdatesListenerTest {
         //проверяем, что пользователь не был сохранен
         verify(userRepository, never()).save(any(User.class));
         //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: +7-9**-***-**-**");
+        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
     }
 
 //    @Test

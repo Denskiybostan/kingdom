@@ -136,6 +136,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             sendMessage(chatId, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
         } else {
             sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+            System.out.println("Версия кода обновлена до 1.1.3 ");
         }
     }
 
