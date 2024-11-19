@@ -42,7 +42,8 @@ import java.util.regex.Pattern;
 public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     public Map<Long, String> userStates = new HashMap<>();
     private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-9\\d{2}-\\d{3}-\\d{2}-\\d{2}");
-    private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁё]+$");
+    //private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁё]+$");
+    private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁёA-Za-z]+([\\s-][А-Яа-яЁёA-Za-z]+)*$");
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     private static final  List <Long> ADMIN_CHAT_ID = Arrays.asList(310232057L, 465693647L); // здесь добавляем нужный id
 
