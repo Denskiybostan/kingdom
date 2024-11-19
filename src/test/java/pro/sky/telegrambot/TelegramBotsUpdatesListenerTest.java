@@ -51,7 +51,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
 
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
@@ -77,7 +77,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
         //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
@@ -99,7 +99,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
         //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
@@ -122,7 +122,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
         //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
@@ -144,7 +144,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
         //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
@@ -166,7 +166,7 @@ public class TelegramBotsUpdatesListenerTest {
         FileService fileService = mock(FileService.class);
         TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
         //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null);
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
         //Настройка поведения мока
         when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
         doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());

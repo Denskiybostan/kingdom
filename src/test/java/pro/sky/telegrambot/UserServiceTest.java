@@ -16,7 +16,7 @@ public class UserServiceTest {
         FileRepository fileRepository = mock(FileRepository.class);
         UserService userService = new UserService(userRepository, fileRepository);
 
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User",  "+71234567890");
+        User testUser = new User(123456789L, 1l, "testLogin", "Test User",  "+71234567890", "Test city");
 
         when(userRepository.findByLogin("testLogin")).thenReturn(testUser);
         String fileName = "testFile.txt";

@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
 public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     public Map<Long, String> userStates = new HashMap<>();
     private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-9\\d{2}-\\d{3}-\\d{2}-\\d{2}");
-//    private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-\\d{3}-\\d{3}-\\d{2}-\\d{2}");
+    private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁё]+$");
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     private static final  List <Long> ADMIN_CHAT_ID = Arrays.asList(310232057L, 465693647L); // здесь добавляем нужный id
 
@@ -83,6 +83,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             if ("PhoneListener".equals(state)) {
                 handleContactInput(chatId, text);
                 userStates.remove(chatId);
+
             } else {
                 switch (text) {
                     case "/start":
@@ -99,7 +100,15 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                     case "Добавить номер телефона для дальнейшей связи":
                         writeDownContactPhoneNumber(chatId);
                         break;
+                    case "Добавить город проживания":
+                        writeDownCity(chatId);
+                        //userStates.put(chatId, "WAITING_FOR_CITY");
+                        break;
                 }
+            }
+            if ("WAITING_FOR_CITY".equals(state)) {
+                handleCityInput(chatId, text);
+                userStates.remove(chatId);
             }
         }
     }
@@ -117,6 +126,20 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 "\n" +
                 "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» ");
         menu(chatId);
+    }
+    public void handleCityInput (Long chatId, String cityInput) {
+        if (CITY_PATTERN.matcher(cityInput).matches()) {
+            var user = repository.findByChatId(chatId);
+            if (user != null) {
+                user.setCity(cityInput);
+                repository.save(user);
+                sendMessage(chatId, "Ваш город успешно сохранен! Нажмите /menu для продолжения.");
+            } else {
+                sendMessage(chatId, "Ошибка: пользователь не найден. Пожалуйста, повторите попытку");
+            }
+        } else {
+            sendMessage(chatId, "Неверный формат города. Введите название города русскими буквами, без цифр и специальных символов");
+        }
     }
 
 
@@ -148,15 +171,20 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 + digitsOnly.substring(7, 9) + "-"  // следующие 2 цифры
                 + digitsOnly.substring(9);          // последние 2 цифры
     }
-
     public void writeDownContactPhoneNumber(long chatId) {
         String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультирует Вас. " +
                 "Введите номер телефона, начиная с 7 без плюса, например" + "\n" + "79998881122";
         sendMessage(chatId, text);
         userStates.put(chatId, "PhoneListener");
     }
+    public void  writeDownCity (long chatId){
+        String text = "Введите город проживания";
+        sendMessage(chatId, text);
+        userStates.put(chatId, "WAITING_FOR_CITY");
+    }
+
     private void menu(long chatId) {
-        String text = " ";
+        String text = "Выберите опцию";
         sendMessage2(chatId, text, menuBot.sendMainMenu(chatId));
     }
 
@@ -208,12 +236,14 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             Row headerRow = sheet.createRow(0);
             headerRow.createCell(0).setCellValue("Login");
             headerRow.createCell(1).setCellValue("Phone");
+            headerRow.createCell(2).setCellValue("City");
             //Заполнение данных
             int rowNum = 1;
             for (User user : allUsers) {
                 Row row = sheet.createRow(rowNum++);
                 row.createCell(0).setCellValue(user.getLogin());
                 row.createCell(1).setCellValue(user.getPhone());
+                row.createCell(2).setCellValue(user.getCity());
             }
             workbook.write(outputStream);
             byte[] excelData = outputStream.toByteArray();

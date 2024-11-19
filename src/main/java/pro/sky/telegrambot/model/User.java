@@ -16,6 +16,8 @@ public class User {
     private String phone;
     @Column(name = "login", nullable = false, unique = true)
     private String login;
+    @Column(name = "city", nullable = true)
+    private String city;
 
 
     public User() {
@@ -27,12 +29,13 @@ public class User {
         return user;
     }
 
-    public User(long chatId, long id, String login, String name, String phone) {
+    public User(long chatId, long id, String login, String name, String phone, String city) {
         this.chatId = chatId;
         this.id = id;
         this.login = login;
         this.name = name;
         this.phone = phone;
+        this.city = city;
     }
 
     public long getChatId() {
@@ -75,27 +78,36 @@ public class User {
         this.id = id;
     }
 
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id == user.id && chatId == user.chatId && Objects.equals(name, user.name) && Objects.equals(phone, user.phone) && Objects.equals(login, user.login);
+        return id == user.id && chatId == user.chatId && Objects.equals(name, user.name) && Objects.equals(phone, user.phone) && Objects.equals(login, user.login) && Objects.equals(city, user.city);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chatId, name, phone, login);
+        return Objects.hash(id, chatId, name, phone, login, city);
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "chatId=" + chatId +
-                ", id=" + id +
+                "phone='" + phone + '\'' +
                 ", name='" + name + '\'' +
-                ", phone='" + phone + '\'' +
                 ", login='" + login + '\'' +
+                ", id=" + id +
+                ", city='" + city + '\'' +
+                ", chatId=" + chatId +
                 '}';
     }
 }
