@@ -18,6 +18,9 @@ public class User {
     private String login;
     @Column(name = "city", nullable = true)
     private String city;
+    @Column(name = "source")
+    private String source;
+
 
 
     public User() {
@@ -86,23 +89,32 @@ public class User {
         this.city = city;
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return id == user.id && chatId == user.chatId && Objects.equals(name, user.name) && Objects.equals(phone, user.phone) && Objects.equals(login, user.login) && Objects.equals(city, user.city);
+        return id == user.id && chatId == user.chatId && Objects.equals(name, user.name) && Objects.equals(phone, user.phone) && Objects.equals(login, user.login) && Objects.equals(city, user.city) && Objects.equals(source, user.source);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, chatId, name, phone, login, city);
+        return Objects.hash(id, chatId, name, phone, login, city, source);
     }
 
     @Override
     public String toString() {
         return "User{" +
-                "phone='" + phone + '\'' +
+                "source='" + source + '\'' +
+                ", phone='" + phone + '\'' +
                 ", name='" + name + '\'' +
                 ", login='" + login + '\'' +
                 ", id=" + id +

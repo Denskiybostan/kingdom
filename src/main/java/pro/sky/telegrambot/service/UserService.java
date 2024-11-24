@@ -10,6 +10,7 @@ import pro.sky.telegrambot.repository.UserRepository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.transaction.Transactional;
 
 
 @Service
@@ -45,6 +46,35 @@ public class UserService {
         FileData file = new FileData(fileName, fileData, user);
         fileRepository.save(file);
     }
+
+    public void saveUserSource(long chatId, String source) {
+        User user = userRepository.findByChatId(chatId);
+        if (user == null) {
+            user = new User();
+            user.setChatId(chatId);
+        }
+        user.setSource(source);
+        userRepository.save(user);
+    }
+}
+//    public void savePhoneNumberToDataBase(long chatId, String phone) {
+//        System.out.println("Сохраняем номер в базу " + phone);
+//        User user = userRepository.findByChatId(chatId);
+//        if (user != null) {
+//            System.out.println("Найден пользователь: " + user);
+//            //если пользователь существует, обнвовляем номер телефона
+//            user.setPhone(phone);
+//            System.out.println("Сохранение номера телефона: " + phone );
+//            userRepository.save(user); //сохраняем пользователя
+//        } else {
+//            System.out.println("Пользователь не найден");
+//            user = new User();
+//            user.setChatId(chatId);
+//            user.setPhone(phone);
+//            userRepository.save(user);
+//            System.out.println("Создан новый пользователь с телефоном " + phone);
+//        }
+//    }
 
 //    @Autowired
 //    private final UserRepository userRepository;
@@ -95,6 +125,5 @@ public class UserService {
 //        }
 //        return user.getCurrencyBalance();
 //        }
-}
 
 

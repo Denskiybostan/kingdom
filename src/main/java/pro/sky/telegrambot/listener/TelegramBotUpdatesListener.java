@@ -27,22 +27,14 @@ import pro.sky.telegrambot.service.FileService;
 import pro.sky.telegrambot.service.UserService;
 
 import javax.annotation.PostConstruct;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
+import java.io.*;
+import java.util.*;
 import java.util.regex.Pattern;
 
 @Service
 public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     public Map<Long, String> userStates = new HashMap<>();
     private static final Pattern PHONE_PATTERN = Pattern.compile("\\+7-9\\d{2}-\\d{3}-\\d{2}-\\d{2}");
-    //private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁё]+$");
     private static final Pattern CITY_PATTERN = Pattern.compile("^[А-Яа-яЁёA-Za-z]+([\\s-][А-Яа-яЁёA-Za-z]+)*$");
     private Logger logger = LoggerFactory.getLogger(TelegramBotUpdatesListener.class);
     private static final  List <Long> ADMIN_CHAT_ID = Arrays.asList(310232057L, 465693647L); // здесь добавляем нужный id
@@ -86,12 +78,28 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 userStates.remove(chatId);
 
             } else {
-                switch (text) {
-                    case "/start":
-                        if (user == null) {
-                            startCommandReceived(chatId, update.getMessage().getChat().getFirstName(), login);
-                            break;
+
+                if (text.startsWith("/start")) {
+                    String source = "unknown";
+                    if (text.contains(" ")) {
+                        String[] parts = text.split(" ");
+                        source = parts.length > 1 ? parts[1] : "unknown"; //извлечение параметра
+                    }
+                    if (user == null) {
+                        startCommandReceived(chatId, update.getMessage().getChat().getFirstName(), login, source);
+                        sendPdfFile(chatId, "./Подарок.pdf");
+                    } else {
+                        if (source != null && !source.equals(user.getSource())) {
+                            user.setSource(source);
+                            userService.saveUserSource(chatId, source);
                         }
+                        sendMessage(chatId, "С вовзращением, " + user.getName() + "! рады видеть вас снова.");
+                        sendPdfFile(chatId, "./Подарок.pdf");
+                    }
+                    return;
+                }
+
+                        switch (text) {
                     case "/menu":
                         menu(chatId);
                         break;
@@ -115,17 +123,33 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
     }
 
     //Основная команда - /start
-    private void startCommandReceived(long chatId, String name, String login) {
-        var user = new User();
-        user.setChatId(chatId);
-        user.setName(name);
-        user.setId(chatId);
-        user.setId(user.getId());
-        user.setLogin(login);
-        repository.save(user);
-        sendMessage(chatId,   name + " , приветствуем на территории Мастерской Игрового Психосинтеза" +
-                "\n" +
-                "Мы альтернативная психологическая онлайн-школа с авторским методом Аглаи Ваньгиной «квантовые игры» ");
+    private void startCommandReceived(long chatId, String name, String login, String source) {
+        var user = repository.findByChatId(chatId);
+        if (user == null) {
+            user = new User();
+            user.setChatId(chatId);
+            user.setName(name);
+            user.setId(chatId);
+            user.setId(user.getId());
+            user.setLogin(login);
+            user.setSource(source);
+            repository.save(user);
+            sendMessage(chatId,  "Здравствуйте, \n" + name +
+                    "\n" +
+                    "Меня зовут Аглая Ваньгина.\n" +
+                    "Я автор игрового психосинтеза, обучила уже более 1000 экспертов помогающих профессий выстраивать свои отношения с деньгам, которые после обучения заработали уже более 150.000.000 рублей.\n" +
+                    "\n" +
+                    "Отправляю вам ваш подарок \uD83C\uDF81: \"Шаблон продающих сторис\".\n" +
+                    "\n" +
+                    "Скачивайте, читайте и главное применяйте. Вы же знаете, что без действий не получить результата, правда? \uD83D\uDE09");
+            menu(chatId);
+        } else {
+            if (source != null && !source.equals(user.getSource())) {
+                user.setSource(source);
+                repository.save(user);
+            }
+            sendMessage(chatId, name + "С возвращением, " + name + "! Рады видеть вас снова.");
+        }
         menu(chatId);
     }
     public void handleCityInput (Long chatId, String cityInput) {
@@ -142,6 +166,82 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             sendMessage(chatId, "Неверный формат города. Введите название города русскими буквами, без цифр и специальных символов");
         }
     }
+
+    public void sendPdfFile(long chatId, String filePath) {
+        File file = new File(filePath);
+        if (file.exists()) {
+            SendDocument sendDocument = new SendDocument();
+            sendDocument.setChatId(chatId);
+            sendDocument.setDocument(new InputFile(file));
+            try {
+                execute(sendDocument);
+            } catch (TelegramApiException e) {
+                logger.error("Failed to send PDF file to chatId {}: {}", chatId, e.getMessage());
+            }
+        }else {
+            logger.error("File not found: {}", filePath);
+            sendMessage(chatId, "К сожалению, файл недоступен");
+        }
+    }
+//    public void sendPhoneNumberButton(long chatId) {
+//        // Создаём ReplyKeyboardMarkup для замены клавиатуры
+//
+//        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+//        keyboardMarkup.setResizeKeyboard(true);
+//
+//        // Создаём строку с кнопкой
+//        KeyboardRow row = new KeyboardRow();
+//        KeyboardButton phoneButton = new KeyboardButton("Отправить номер телефона");
+//        phoneButton.setRequestContact(true); // Запрос контакта
+//        row.add(phoneButton);
+//
+//        // Добавляем строку в клавиатуру
+//        List<KeyboardRow> keyboard = new ArrayList<>();
+//        keyboard.add(row);
+//        keyboardMarkup.setKeyboard(keyboard);
+//
+//        // Формируем сообщение
+//        SendMessage message = new SendMessage();
+//        message.setChatId(chatId);
+//        message.setText("Пожалуйста, отправьте ваш номер телефона.");
+//        message.setReplyMarkup(keyboardMarkup);
+//
+//        // Отправляем сообщение
+//        try {
+//            execute(message);
+//            logger.info("Sent phone request button to chatId {}", chatId);
+//        } catch (TelegramApiException e) {
+//            logger.error("Failed to send phone request button to chatId {}", chatId, e);
+//        }
+//    }
+//
+//    public void handleContactInput(long chatId, Update update) {
+//        // Проверка на наличие контакта
+//        if (update.getMessage().getContact() != null) {
+//            String phoneNumber = update.getMessage().getContact().getPhoneNumber();
+//
+//            if (phoneNumber != null && !phoneNumber.isEmpty()) {
+//                // Логируем номер телефона, чтобы понять, что передается
+//                System.out.println("Получен номер телефона: " + phoneNumber);
+//
+//                // Сохраняем номер телефона в базу данных
+//                userService.savePhoneNumberToDataBase(chatId, phoneNumber);
+//
+//                // Подтверждаем сохранение
+//                sendMessage(chatId, "Ваш номер телефона сохранен: " + phoneNumber);
+//
+//                // Очищаем состояние пользователя
+//                userStates.remove(chatId);
+//
+//                // Отправляем главное меню
+//                menuBot.sendMainMenu(chatId);
+//            } else {
+//                sendMessage(chatId, "Пожалуйста, отправьте корректный номер телефона.");
+//            }
+//        } else {
+//            sendMessage(chatId, "Пожалуйста, отправьте свой контакт через кнопку.");
+//        }
+//    }
 
 
     //Метод, определяющий правильность номера телефона и позволяющий записать контактные данные в БД при корректном их написании
@@ -238,6 +338,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             headerRow.createCell(0).setCellValue("Login");
             headerRow.createCell(1).setCellValue("Phone");
             headerRow.createCell(2).setCellValue("City");
+            headerRow.createCell(3).setCellValue("Source");
             //Заполнение данных
             int rowNum = 1;
             for (User user : allUsers) {
@@ -245,6 +346,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 row.createCell(0).setCellValue(user.getLogin());
                 row.createCell(1).setCellValue(user.getPhone());
                 row.createCell(2).setCellValue(user.getCity());
+                row.createCell(3).setCellValue(user.getSource());
             }
             workbook.write(outputStream);
             byte[] excelData = outputStream.toByteArray();

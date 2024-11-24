@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 public class TelegramBotsUpdatesListenerTest {
+
     @Test
     public void testWriteDownContactPhoneNumber() {
         // Создание мока для TelegramBotUpdatesListener

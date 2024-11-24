@@ -3,6 +3,7 @@ package pro.sky.telegrambot.model;
 
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
@@ -22,6 +23,13 @@ public class MenuBot {
         row1.add("Добавить номер телефона для дальнейшей связи");
         row1.add("Добавить город проживания");
         keyboardRows.add(row1);
+//
+//        KeyboardRow row2 = new KeyboardRow();
+//        KeyboardButton phoneButton = new KeyboardButton("Отправить номер телефона");
+//        phoneButton.setRequestContact(true);
+//        row2.add(phoneButton);
+//        keyboardRows.add(row2);
+
         if (isAdmin(chatId)) {
             KeyboardRow adminRow = new KeyboardRow();
             adminRow.add("скачать");
