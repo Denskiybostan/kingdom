@@ -23,12 +23,7 @@ public class MenuBot {
         row1.add("Добавить номер телефона для дальнейшей связи");
         row1.add("Добавить город проживания");
         keyboardRows.add(row1);
-//
-//        KeyboardRow row2 = new KeyboardRow();
-//        KeyboardButton phoneButton = new KeyboardButton("Отправить номер телефона");
-//        phoneButton.setRequestContact(true);
-//        row2.add(phoneButton);
-//        keyboardRows.add(row2);
+
 
         if (isAdmin(chatId)) {
             KeyboardRow adminRow = new KeyboardRow();

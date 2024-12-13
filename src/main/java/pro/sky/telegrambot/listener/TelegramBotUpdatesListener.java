@@ -13,9 +13,13 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Contact;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import pro.sky.telegrambot.configuration.ConfigurationKingdom;
@@ -66,15 +70,16 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
 
     @Override
     public void onUpdateReceived(Update update) {
+        long chatId = update.getMessage().getChatId();
         if (update.hasMessage() && update.getMessage().hasText()) {
             String text = update.getMessage().getText();
-            long chatId = update.getMessage().getChatId();
+
             String login = update.getMessage().getFrom().getUserName();
             var state = userStates.get(chatId);
             var user = userService.findByUser(chatId);
 
             if ("PhoneListener".equals(state)) {
-                handleContactInput(chatId, text);
+                sendPhoneNumberButton(chatId);
                 userStates.remove(chatId);
 
             } else {
@@ -99,7 +104,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                     return;
                 }
 
-                        switch (text) {
+                switch (text) {
                     case "/menu":
                         menu(chatId);
                         break;
@@ -108,6 +113,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                         break;
                     case "Добавить номер телефона для дальнейшей связи":
                         writeDownContactPhoneNumber(chatId);
+                        userStates.put(chatId, "WAITING_FOR_PHONE");
                         break;
                     case "Добавить город проживания":
                         writeDownCity(chatId);
@@ -118,6 +124,20 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             if ("WAITING_FOR_CITY".equals(state)) {
                 handleCityInput(chatId, text);
                 userStates.remove(chatId);
+            }
+        } else if (update.getMessage().hasContact()) {
+            Contact contact = update.getMessage().getContact();
+            saveContactToDatabase(contact, chatId);
+
+            SendMessage message = new SendMessage();
+            message.setChatId(chatId);
+            message.setText("Спасибо! Ваш номер телефона сохранён.");
+
+            try {
+                execute(message);
+                menu(chatId);
+            } catch (TelegramApiException e) {
+                logger.error("Failed to send confirmation message to chatId {}", chatId, e);
             }
         }
     }
@@ -142,7 +162,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                     "Отправляю вам ваш подарок \uD83C\uDF81: \"Шаблон продающих сторис\".\n" +
                     "\n" +
                     "Скачивайте, читайте и главное применяйте. Вы же знаете, что без действий не получить результата, правда? \uD83D\uDE09");
-            menu(chatId);
+//            menu(chatId);
         } else {
             if (source != null && !source.equals(user.getSource())) {
                 user.setSource(source);
@@ -183,86 +203,65 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
             sendMessage(chatId, "К сожалению, файл недоступен");
         }
     }
-//    public void sendPhoneNumberButton(long chatId) {
-//        // Создаём ReplyKeyboardMarkup для замены клавиатуры
-//
-//        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
-//        keyboardMarkup.setResizeKeyboard(true);
-//
-//        // Создаём строку с кнопкой
-//        KeyboardRow row = new KeyboardRow();
-//        KeyboardButton phoneButton = new KeyboardButton("Отправить номер телефона");
-//        phoneButton.setRequestContact(true); // Запрос контакта
-//        row.add(phoneButton);
-//
-//        // Добавляем строку в клавиатуру
-//        List<KeyboardRow> keyboard = new ArrayList<>();
-//        keyboard.add(row);
-//        keyboardMarkup.setKeyboard(keyboard);
-//
-//        // Формируем сообщение
-//        SendMessage message = new SendMessage();
-//        message.setChatId(chatId);
-//        message.setText("Пожалуйста, отправьте ваш номер телефона.");
-//        message.setReplyMarkup(keyboardMarkup);
-//
-//        // Отправляем сообщение
-//        try {
-//            execute(message);
-//            logger.info("Sent phone request button to chatId {}", chatId);
-//        } catch (TelegramApiException e) {
-//            logger.error("Failed to send phone request button to chatId {}", chatId, e);
-//        }
-//    }
-//
-//    public void handleContactInput(long chatId, Update update) {
-//        // Проверка на наличие контакта
-//        if (update.getMessage().getContact() != null) {
-//            String phoneNumber = update.getMessage().getContact().getPhoneNumber();
-//
-//            if (phoneNumber != null && !phoneNumber.isEmpty()) {
-//                // Логируем номер телефона, чтобы понять, что передается
-//                System.out.println("Получен номер телефона: " + phoneNumber);
-//
-//                // Сохраняем номер телефона в базу данных
-//                userService.savePhoneNumberToDataBase(chatId, phoneNumber);
-//
-//                // Подтверждаем сохранение
-//                sendMessage(chatId, "Ваш номер телефона сохранен: " + phoneNumber);
-//
-//                // Очищаем состояние пользователя
-//                userStates.remove(chatId);
-//
-//                // Отправляем главное меню
-//                menuBot.sendMainMenu(chatId);
-//            } else {
-//                sendMessage(chatId, "Пожалуйста, отправьте корректный номер телефона.");
-//            }
-//        } else {
-//            sendMessage(chatId, "Пожалуйста, отправьте свой контакт через кнопку.");
-//        }
-//    }
+    public void sendPhoneNumberButton(long chatId) {
+        // Создаём ReplyKeyboardMarkup для замены клавиатуры
+
+        ReplyKeyboardMarkup keyboardMarkup = new ReplyKeyboardMarkup();
+        keyboardMarkup.setResizeKeyboard(true);
+
+        // Создаём строку с кнопкой
+        KeyboardRow row = new KeyboardRow();
+        KeyboardButton phoneButton = new KeyboardButton("Отправить номер телефона");
+        phoneButton.setRequestContact(true); // Запрос контакта
+        row.add(phoneButton);
+
+        // Добавляем строку в клавиатуру
+        List<KeyboardRow> keyboard = new ArrayList<>();
+        keyboard.add(row);
+        keyboardMarkup.setKeyboard(keyboard);
+
+        // Формируем сообщение
+        SendMessage message = new SendMessage();
+        message.setChatId(chatId);
+        message.setText( "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультирует Вас. " +
+                "Пожалуйста, нажмите на кнопку ниже, чтобы отправить ваш номер телефона.");
+        message.setReplyMarkup(keyboardMarkup);
+
+        // Отправляем сообщение
+        try {
+            execute(message);
+            logger.info("Sent phone request button to chatId {}", chatId);
+        } catch (TelegramApiException e) {
+            logger.error("Failed to send phone request button to chatId {}", chatId, e);
+        }
+    }
+    private void saveContactToDatabase(Contact contact, long chatId) {
+        // Используем метод savePhoneNumber из UserService для сохранения номера телефона
+        userService.savePhoneNumber(chatId, contact.getPhoneNumber());
+
+    }
+
 
 
     //Метод, определяющий правильность номера телефона и позволяющий записать контактные данные в БД при корректном их написании
-    public void handleContactInput(Long chatId, String text) {
-        String digitsOnly = text.replaceAll("\\D", ""); // Извлекаем только цифры
-        // Проверяем, что длина номера правильная (обычно 11 цифр, включая код страны)
-        if (digitsOnly.length() == 11 && digitsOnly.startsWith("7")) {
-            String formattedPhone = formatPhoneNumber(digitsOnly);
-            var task = repository.findByChatId(chatId);
-            task.setPhone(formattedPhone);
-            repository.save(task);
-            String fileName = "user_" + chatId + "_phone.txt";
-            byte[] fileData = formattedPhone.getBytes();
-            String userLogin = task.getLogin();
-            fileService.saveFile(fileName, fileData, userLogin);
-            sendMessage(chatId, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
-        } else {
-            sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-            System.out.println("Версия кода обновлена до 1.1.3 ");
-        }
-    }
+//    public void handleContactInput(Long chatId, String text) {
+//        String digitsOnly = text.replaceAll("\\D", ""); // Извлекаем только цифры
+//        // Проверяем, что длина номера правильная (обычно 11 цифр, включая код страны)
+//        if (digitsOnly.length() == 11 && digitsOnly.startsWith("7")) {
+//            String formattedPhone = formatPhoneNumber(digitsOnly);
+//            var task = repository.findByChatId(chatId);
+//            task.setPhone(formattedPhone);
+//            repository.save(task);
+//            String fileName = "user_" + chatId + "_phone.txt";
+//            byte[] fileData = formattedPhone.getBytes();
+//            String userLogin = task.getLogin();
+//            fileService.saveFile(fileName, fileData, userLogin);
+//            sendMessage(chatId, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
+//        } else {
+//            sendMessage(chatId, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//            System.out.println("Версия кода обновлена до 1.1.3 ");
+//        }
+//    }
 
     private String formatPhoneNumber(String digitsOnly) {
         // Форматируем телефон: +7-XXX-XXX-XX-XX
@@ -273,9 +272,10 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
                 + digitsOnly.substring(9);          // последние 2 цифры
     }
     public void writeDownContactPhoneNumber(long chatId) {
-        String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультирует Вас. " +
-                "Введите номер телефона, начиная с 7 без плюса, например" + "\n" + "79998881122";
-        sendMessage(chatId, text);
+//        String text = "Я могу записать Ваши контактные данные и в ближайшее время с Вами свяжется наш ассистент и проконсультирует Вас. " +
+//                "Введите номер телефона, начиная с 7 без плюса, например" + "\n" + "79998881122";
+        sendPhoneNumberButton(chatId);
+//        sendMessage(chatId, text);
         userStates.put(chatId, "PhoneListener");
     }
     public void  writeDownCity (long chatId){

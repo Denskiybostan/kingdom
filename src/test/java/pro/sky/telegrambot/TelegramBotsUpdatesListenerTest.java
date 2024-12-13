@@ -42,143 +42,143 @@ public class TelegramBotsUpdatesListenerTest {
         verify(telegramBotUpdatesListener, times(1)).sendMessage(eq(chatId), anyString());
     }
 
-    @Test
-    public void testHandleContactInput_ValidPhoneNumber() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-        //Тестируем метод
-        String validPhoneNumber = "+79998881122"; //корректный номер телефона
-        telegramBotUpdatesListener.handleContactInput(123456789L, validPhoneNumber);
-        verify(userRepository, times(1)).save(testUser);
-        assertEquals("+7-999-888-11-22", testUser.getPhone());//имеет место, когда есть метод форматирования
-        //проверяем, что файл был сохранен
-        String expectedFileName = "user_123456789_phone.txt";
-        verify(fileService, times(1)).saveFile(eq(expectedFileName), any(byte[].class), eq(testUser.getLogin()));
-        // проверяем, что сообщение было отправлено
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
-    }
-
-    @Test
-    public void testHandleContactInput_InvalidPhoneNumber() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-        //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-        //Тестируем метод
-        String invalidPhoneNumber = "12345"; //корректный номер телефона
-        telegramBotUpdatesListener.handleContactInput(123456789L, invalidPhoneNumber);
-        verify(userRepository, never()).save(any(User.class));
-        //проверка сообщения об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-    }
-
-    @Test
-    public void testHandleContactInput_TooManyDigits() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-        //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-
-        String tooManyDigitsPhoneNumber = "7999888112233"; //напишем 13 цифр вместо 11
-        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
-        //проверяем, что пользователь не был сохранен
-        verify(userRepository, never()).save(any(User.class));
-        //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-    }
-
-    @Test
-    public void testHandleContactInput_TooShortPhoneNumber() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-        //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-
-        String tooManyDigitsPhoneNumber = "799988811"; //напишем 13 цифр вместо 11
-        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
-        //проверяем, что пользователь не был сохранен
-        verify(userRepository, never()).save(any(User.class));
-        //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-    }
-    @Test
-    public void testHandleContactInput_PhoneNumberWithNonNumericCharacters() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-        //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-
-        String tooManyDigitsPhoneNumber = "799988811sf"; //напишем 13 цифр вместо 11
-        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
-        //проверяем, что пользователь не был сохранен
-        verify(userRepository, never()).save(any(User.class));
-        //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-    }
-    @Test
-    public void testHandleContactInput_EmptyOrNullPhoneNumber() {
-        UserRepository userRepository = mock(UserRepository.class);
-        FileRepository fileRepository = mock(FileRepository.class);
-        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
-        UserService userService = mock(UserService.class);
-        MenuBot menuBot = mock(MenuBot.class);
-        FileService fileService = mock(FileService.class);
-        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
-        //создаем тестового пользователя
-        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
-        //Настройка поведения мока
-        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
-        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
-
-        String tooManyDigitsPhoneNumber = ""; //напишем 13 цифр вместо 11
-        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
-        //проверяем, что пользователь не был сохранен
-        verify(userRepository, never()).save(any(User.class));
-        //проверка на сообщение об ошибке
-        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
-    }
+//    @Test
+//    public void testHandleContactInput_ValidPhoneNumber() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//        //Тестируем метод
+//        String validPhoneNumber = "+79998881122"; //корректный номер телефона
+//        telegramBotUpdatesListener.handleContactInput(123456789L, validPhoneNumber);
+//        verify(userRepository, times(1)).save(testUser);
+//        assertEquals("+7-999-888-11-22", testUser.getPhone());//имеет место, когда есть метод форматирования
+//        //проверяем, что файл был сохранен
+//        String expectedFileName = "user_123456789_phone.txt";
+//        verify(fileService, times(1)).saveFile(eq(expectedFileName), any(byte[].class), eq(testUser.getLogin()));
+//        // проверяем, что сообщение было отправлено
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Номер телефона успешно сохранен! Нажмите кнопку /menu");
+//    }
+//
+//    @Test
+//    public void testHandleContactInput_InvalidPhoneNumber() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//        //создаем тестового пользователя
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//        //Тестируем метод
+//        String invalidPhoneNumber = "12345"; //корректный номер телефона
+//        telegramBotUpdatesListener.handleContactInput(123456789L, invalidPhoneNumber);
+//        verify(userRepository, never()).save(any(User.class));
+//        //проверка сообщения об ошибке
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//    }
+//
+//    @Test
+//    public void testHandleContactInput_TooManyDigits() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//        //создаем тестового пользователя
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//
+//        String tooManyDigitsPhoneNumber = "7999888112233"; //напишем 13 цифр вместо 11
+//        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
+//        //проверяем, что пользователь не был сохранен
+//        verify(userRepository, never()).save(any(User.class));
+//        //проверка на сообщение об ошибке
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//    }
+//
+//    @Test
+//    public void testHandleContactInput_TooShortPhoneNumber() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//        //создаем тестового пользователя
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//
+//        String tooManyDigitsPhoneNumber = "799988811"; //напишем 13 цифр вместо 11
+//        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
+//        //проверяем, что пользователь не был сохранен
+//        verify(userRepository, never()).save(any(User.class));
+//        //проверка на сообщение об ошибке
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//    }
+//    @Test
+//    public void testHandleContactInput_PhoneNumberWithNonNumericCharacters() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//        //создаем тестового пользователя
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//
+//        String tooManyDigitsPhoneNumber = "799988811sf"; //напишем 13 цифр вместо 11
+//        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
+//        //проверяем, что пользователь не был сохранен
+//        verify(userRepository, never()).save(any(User.class));
+//        //проверка на сообщение об ошибке
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//    }
+//    @Test
+//    public void testHandleContactInput_EmptyOrNullPhoneNumber() {
+//        UserRepository userRepository = mock(UserRepository.class);
+//        FileRepository fileRepository = mock(FileRepository.class);
+//        ConfigurationKingdom kingdom = mock(ConfigurationKingdom.class);
+//        UserService userService = mock(UserService.class);
+//        MenuBot menuBot = mock(MenuBot.class);
+//        FileService fileService = mock(FileService.class);
+//        TelegramBotUpdatesListener telegramBotUpdatesListener = spy(new TelegramBotUpdatesListener(kingdom, userRepository, userService, fileRepository, menuBot, fileService));
+//        //создаем тестового пользователя
+//        User testUser = new User(123456789L, 1l, "testLogin", "Test User", null, "Test city");
+//        //Настройка поведения мока
+//        when(userRepository.findByChatId(123456789L)).thenReturn(testUser);
+//        doNothing().when(telegramBotUpdatesListener).sendMessage(anyLong(), anyString());
+//
+//        String tooManyDigitsPhoneNumber = ""; //напишем 13 цифр вместо 11
+//        telegramBotUpdatesListener.handleContactInput(123456789L, tooManyDigitsPhoneNumber);
+//        //проверяем, что пользователь не был сохранен
+//        verify(userRepository, never()).save(any(User.class));
+//        //проверка на сообщение об ошибке
+//        verify(telegramBotUpdatesListener, times(1)).sendMessage(123456789L, "Неверный формат номера телефона. Пожалуйста, введите номер в формате: '79992221123' и повторно нажмите 'Добавить номер телефона для дальнейшей связи'");
+//    }
 
 //    @Test
 //    public void testExportDataToFile_Success() throws TelegramApiException {

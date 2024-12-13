@@ -56,6 +56,22 @@ public class UserService {
         user.setSource(source);
         userRepository.save(user);
     }
+    @Transactional
+    public void savePhoneNumber(Long chatId, String phoneNumber) {
+        // Находим пользователя по chatId
+        var user = userRepository.findByChatId(chatId);
+
+        if (user == null) {
+            // Если пользователь не найден, сообщаем об ошибке
+            throw new RuntimeException("Пользователь с chatId " + chatId + " не найден");
+        }
+
+        // Сохраняем номер телефона в модель пользователя
+        user.setPhone(phoneNumber);
+
+        // Сохраняем обновления в базе данных
+        userRepository.save(user);
+    }
 }
 //    public void savePhoneNumberToDataBase(long chatId, String phone) {
 //        System.out.println("Сохраняем номер в базу " + phone);
