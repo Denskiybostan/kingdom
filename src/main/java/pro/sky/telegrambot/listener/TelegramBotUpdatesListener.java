@@ -189,6 +189,7 @@ public class TelegramBotUpdatesListener extends TelegramLongPollingBot {
 
     public void sendPdfFile(long chatId, String filePath) {
         File file = new File(filePath);
+        filePath = "/opt/myproject/telegram-bot 4/Подарок.pdf";
         if (file.exists()) {
             SendDocument sendDocument = new SendDocument();
             sendDocument.setChatId(chatId);
